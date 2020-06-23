@@ -59,6 +59,7 @@ void BehaviorQuadrotorMpcMotionControl::onActivate()
 }
 
 void BehaviorQuadrotorMpcMotionControl::onDeactivate(){
+  std::cout << "DEACTIVATED MPC" << std::endl;
   ros::ServiceClient stop_controller=node_handle.serviceClient<std_srvs::Empty>("/"+nspace+"/mav_linear_mpc/stop");
   std_srvs::Empty req;
   stop_controller.call(req);

@@ -46,22 +46,24 @@ void BehaviorHoverWithMpcControl::onConfigure()
 {
   node_handle = getNodeHandle();
   nspace = getNamespace(); 
-
-  //Subscriber
-  status_sub = node_handle.subscribe("/" + nspace + "/self_localization/flight_state", 1, &BehaviorHoverWithMpcControl::statusCallBack, this);
 }
 
 bool BehaviorHoverWithMpcControl::checkSituation()
 {
+  geometry_msgs::PoseStamped::ConstPtr sharedPose;
+  geometry_msgs::PoseStamped drone_initial_pose;
+  sharedPose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/" + nspace + "/self_localization/pose",node_handle);
+  if(sharedPose != NULL){
+    drone_initial_pose = *sharedPose;
+  }
+
   //Quadrotor is FLYING
-  if ((status_msg.state != aerostack_msgs::FlightState::LANDED) && 
-      (status_msg.state != aerostack_msgs::FlightState::UNKNOWN)&&
-      (status_msg.state != aerostack_msgs::FlightState::LANDING)){
+  if (drone_initial_pose.pose.position.z > 0.2){
     return true;
   }
   else{
     setErrorMessage("Error: Drone is not flying");
-    std::cout<<"Error: Drone is not flying"<<std::endl;
+    std::cout<<"Error: Drone is not flying"<< std::endl;
     return false;
   }
 }
@@ -69,6 +71,7 @@ bool BehaviorHoverWithMpcControl::checkSituation()
 void BehaviorHoverWithMpcControl::onActivate()
 {
   motion_reference_pose_pub = node_handle.advertise<geometry_msgs::PoseStamped>("/" + nspace + "/motion_reference/pose", 1,true);
+  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
   self_localization_speed_sub = node_handle.subscribe("/" + nspace + "/self_localization/speed", 1, &BehaviorHoverWithMpcControl::selfLocalizationSpeedCallBack, this);
 
   //Get current drone pose
@@ -82,6 +85,9 @@ void BehaviorHoverWithMpcControl::onActivate()
   quadrotor_moving = true;
   received_speed = false;
   motion_reference_pose_pub.publish(drone_initial_pose);  
+  aerostack_msgs::FlightState flight_state_msg;
+  flight_state_msg.state = aerostack_msgs::FlightState::HOVERING;
+  flight_state_pub.publish(flight_state_msg);
 }
 
 void BehaviorHoverWithMpcControl::onDeactivate()
@@ -126,9 +132,6 @@ bool BehaviorHoverWithMpcControl::checkQuadrotorStopped()
 
 void BehaviorHoverWithMpcControl::selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg){
   estimated_speed_msg = msg; received_speed = true;
-}
-void BehaviorHoverWithMpcControl::statusCallBack(const aerostack_msgs::FlightState &msg){
-  status_msg = msg;
 }
 
 }

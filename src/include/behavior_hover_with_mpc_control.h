@@ -41,11 +41,9 @@
 
 // Aerostack msgs
 #include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/FlightActionCommand.h>
 #include "aerostack_msgs/FlightState.h"
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include "mav_msgs/RollPitchYawrateThrust.h"
 #include <aerostack_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/RequestProcesses.h>
 // Aerostack libraries
@@ -62,25 +60,13 @@ public:
   ~BehaviorHoverWithMpcControl();
 
 private:
-  // Congfig variables
-  std::string self_localization_speed_str;
-  std::string self_localization_pose_str;
-  std::string command_high_level_str;
-  std::string motion_reference_speed_str;
-  std::string status_str;
-  std::string set_control_mode_srv;
-  std::string motion_reference_pose_str;
-
   ros::NodeHandle node_handle;
   std::string nspace; 
-  // Communication variables
-  ros::ServiceClient request_processes_activation_cli;
-  ros::ServiceClient request_processes_deactivation_cli;
   // Subscriber
   ros::Subscriber self_localization_speed_sub;  
-  ros::Subscriber status_sub;
   //Publishers
   ros::Publisher motion_reference_pose_pub;
+  ros::Publisher flight_state_pub;
   
   // Messages
   geometry_msgs::TwistStamped estimated_speed_msg;
@@ -108,7 +94,6 @@ private:
 public: 
   // Callbacks
   void selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg);
-  void statusCallBack(const aerostack_msgs::FlightState &msg);
 };
 }
 

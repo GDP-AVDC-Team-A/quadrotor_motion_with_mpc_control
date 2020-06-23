@@ -43,17 +43,14 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/RequestProcesses.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <trajectory_msgs/MultiDOFJointTrajectoryPoint.h>
 #include <cmath>
 // Aerostack msgs
 #include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/FlightActionCommand.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Transform.h>
-#include "mav_msgs/RollPitchYawrateThrust.h"
 #include "aerostack_msgs/FlightState.h"
 #include <nav_msgs/Path.h>
 // Aerostack libraries
@@ -80,16 +77,14 @@ private:
   ros::Subscriber self_localization_speed_sub; 
   ros::Subscriber self_localization_pose_sub;   
   ros::Subscriber motion_reference_pose_sub;
-  ros::Subscriber status_sub;
   ros::Subscriber motion_reference_remaining_path;
   ros::Subscriber path_blocked_sub;
   //Publishers
-  ros::Publisher motion_reference_trajectory_pub;
+  ros::Publisher motion_reference_trajectory_pub; 
+  ros::Publisher flight_state_pub;
 
   // Messages
   geometry_msgs::TwistStamped estimated_speed_msg;
-  aerostack_msgs::FlightState status_msg;
-  aerostack_msgs::FlightActionCommand high_level_command;
   geometry_msgs::TwistStamped motion_reference_speed;
   trajectory_msgs::MultiDOFJointTrajectory reference_path;
   nav_msgs::Path remaining_path;
@@ -120,13 +115,13 @@ private:
   void checkProcesses();
 
   bool checkQuadrotorStopped();
+  double checkFinalDistance();
 public: 
 // Callbacks
 void selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg);
 void selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg);
 void motionReferencePoseCallBack(const geometry_msgs::PoseStamped &msg);
 void motionReferenceRemainingPathCallBack(const nav_msgs::Path &msg);
-void statusCallBack(const aerostack_msgs::FlightState &msg);
 void pathBlockedCallBack(const std_msgs::Bool &msg);
 };
 }

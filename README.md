@@ -1,5 +1,5 @@
 # quadrotor_motion_with_mpc_control
-## behavior_follow_path
+## behavior_follow_path_with_mpc_control
 
 **Purpose**: This behavior follows a path while using the path tracker. This behavior does not finish until the robot reach the last point. The argument is a tuple of coordinates.
 

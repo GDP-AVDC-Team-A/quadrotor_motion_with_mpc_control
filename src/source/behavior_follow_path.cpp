@@ -45,24 +45,16 @@ void BehaviorFollowPath::onConfigure()
   node_handle = getNodeHandle();
   nspace = getNamespace();
   ros::param::get("~drone_max_speed", DRONE_MAX_SPEED);
-  //Subscriber
-  status_sub = node_handle.subscribe("/" + nspace + "/self_localization/flight_state", 1, &BehaviorFollowPath::statusCallBack, this);
 }
 
 
 bool BehaviorFollowPath::checkSituation()
 {
-  //Quadrotor is FLYING
-  if (status_msg.state == aerostack_msgs::FlightState::LANDED){
-    setErrorMessage("Error: Drone is landed");
-    std::cout<<"Error: Drone is landed"<<std::endl;
-    return false;
-  }
-return true;
+  return true;
 }
 
 void BehaviorFollowPath::checkGoal(){ 
-  if(initiated && remaining_points == 0){
+  if(initiated && remaining_points == 0 && checkFinalDistance() < 0.1 && checkQuadrotorStopped()){
     initiated = false;
     BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
   } 
@@ -70,6 +62,13 @@ void BehaviorFollowPath::checkGoal(){
 
 void BehaviorFollowPath::onExecute()
 {
+  
+}
+
+double BehaviorFollowPath::checkFinalDistance(){
+  return abs(sqrt(pow(last_path_point.pose.position.x-estimated_pose_msg.pose.position.x,2)
+  +pow(last_path_point.pose.position.y-estimated_pose_msg.pose.position.y,2)
+  +pow(last_path_point.pose.position.z-estimated_pose_msg.pose.position.z,2)));
   
 }
 
@@ -99,6 +98,7 @@ void BehaviorFollowPath::onActivate()
   
   //Publishers
   motion_reference_trajectory_pub = node_handle.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/" + nspace + "/motion_reference/trajectory",1, true);
+  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
 
   //Get current drone pose
   geometry_msgs::PoseStamped::ConstPtr sharedPose;
@@ -140,8 +140,8 @@ void BehaviorFollowPath::onActivate()
       +pow(drone_initial_pose.pose.position.z-points[0][2],2)));
       //Calculates time to reach point
       double time_to_point;
-      if (distance_to_point < 0.1) time_to_point = 3;
-      else time_to_point = distance_to_point/DRONE_MAX_SPEED;
+      if (distance_to_point < 0.1) time_to_point += 3;
+      else time_to_point += distance_to_point/DRONE_MAX_SPEED;
       ros::Duration d(time_to_point);
       point_ref.time_from_start = d;
       point_ref.transforms.push_back(trans_ref);
@@ -155,10 +155,11 @@ void BehaviorFollowPath::onActivate()
         distance_to_point = abs(sqrt(pow(points[i-1][0]-points[i][0],2)+pow(points[i-1][1]-points[i][1],2)+pow(points[i-1][2]-points[i][2],2)));
         distance += distance_to_point;
         //Calculates time to reach point
-        if (distance_to_point < 0.1) time_to_point = 3;
-        else time_to_point = distance_to_point/DRONE_MAX_SPEED;
+        if (distance_to_point < 0.1) time_to_point += 3;
+        else time_to_point += distance_to_point/DRONE_MAX_SPEED;
         ros::Duration d2(time_to_point);
         point_ref.time_from_start = d2;
+        point_ref.transforms.clear();
         point_ref.transforms.push_back(trans_ref);
         reference_path.points.push_back(point_ref);
       }
@@ -180,8 +181,8 @@ void BehaviorFollowPath::onActivate()
       +pow(drone_initial_pose.pose.position.z-points[0][2],2)));
       //Calculates time to reach point
       double time_to_point;
-      if (distance_to_point < 0.1) time_to_point = 3;
-      else time_to_point = distance_to_point/DRONE_MAX_SPEED;
+      if (distance_to_point < 0.1) time_to_point += 3;
+      else time_to_point += distance_to_point/DRONE_MAX_SPEED;
       ros::Duration d(time_to_point);
       point_ref.time_from_start = d;
       point_ref.transforms.push_back(trans_ref);
@@ -201,10 +202,11 @@ void BehaviorFollowPath::onActivate()
         distance_to_point = abs(sqrt(pow(points[i-1][0]-points[i][0],2)+pow(points[i-1][1]-points[i][1],2)+pow(points[i-1][2]-points[i][2],2)));
         distance += distance_to_point;
         //Calculates time to reach point
-        if (distance_to_point < 0.1) time_to_point = 3;
-        else time_to_point = distance_to_point/DRONE_MAX_SPEED;
+        if (distance_to_point < 0.1) time_to_point += 3;
+        else time_to_point += distance_to_point/DRONE_MAX_SPEED;
         ros::Duration d2(time_to_point);
         point_ref.time_from_start = d2;
+        point_ref.transforms.clear();
         point_ref.transforms.push_back(trans_ref);
         reference_path.points.push_back(point_ref);
       }
@@ -223,9 +225,13 @@ void BehaviorFollowPath::onActivate()
     execute = false;   
     return;
   }
-
   //Send trajectory
+  reference_path.header.stamp = ros::Time::now();
   motion_reference_trajectory_pub.publish(reference_path);
+  //Change flight state
+  aerostack_msgs::FlightState flight_state_msg;
+  flight_state_msg.state = aerostack_msgs::FlightState::FLYING;
+  flight_state_pub.publish(flight_state_msg);
 }
 
 void BehaviorFollowPath::onDeactivate()
@@ -277,12 +283,11 @@ void BehaviorFollowPath::motionReferencePoseCallBack(const geometry_msgs::PoseSt
   }
 }
 
-void BehaviorFollowPath::statusCallBack(const aerostack_msgs::FlightState &msg){
-  status_msg = msg;
-}
-
 void BehaviorFollowPath::motionReferenceRemainingPathCallBack(const nav_msgs::Path &msg){
   remaining_path = msg;
+  if (remaining_path.poses.size() == 1){
+    last_path_point = remaining_path.poses[0];
+  }
   remaining_points = remaining_path.poses.size();
   initiated = true;
 }

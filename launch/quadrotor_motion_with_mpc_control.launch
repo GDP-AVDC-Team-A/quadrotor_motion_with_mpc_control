@@ -6,7 +6,7 @@
     <arg name="check_activation_conditions_srv"    default="check_activation_conditions" />
     <arg name="activation_finished_topic"          default="behavior_activation_finished" />
     <arg name="behavior_system"                    default="quadrotor_motion_with_mpc_control" />
-    <arg name="drone_max_speed"                    default="5.0" /> <!-- m/s -->
+    <arg name="drone_max_speed"                    default="1.0" /> <!-- m/s -->
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
         <param name="~namespace"                           value="$(arg namespace)"                          type="str" />

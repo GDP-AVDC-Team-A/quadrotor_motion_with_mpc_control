@@ -45,21 +45,24 @@ void BehaviorRotateWithMpcControl::onConfigure()
   node_handle = getNodeHandle();
   nspace = getNamespace(); 
 
-  //Subscriber
-  status_sub = node_handle.subscribe("/" + nspace + "/self_localization/flight_state", 1, &BehaviorRotateWithMpcControl::statusCallBack, this);
 }
 
 bool BehaviorRotateWithMpcControl::checkSituation()
 {
+  geometry_msgs::PoseStamped::ConstPtr sharedPose;
+  geometry_msgs::PoseStamped drone_initial_pose;
+  sharedPose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/" + nspace + "/self_localization/pose",node_handle);
+  if(sharedPose != NULL){
+    drone_initial_pose = *sharedPose;
+  }
+
   //Quadrotor is FLYING
-  if ((status_msg.state != aerostack_msgs::FlightState::LANDED) && 
-      (status_msg.state != aerostack_msgs::FlightState::UNKNOWN)&&
-      (status_msg.state != aerostack_msgs::FlightState::LANDING)){
+  if (drone_initial_pose.pose.position.z > 0.2){
     return true;
   }
   else{
     setErrorMessage("Error: Drone is not flying");
-    std::cout<<"Error: Drone is not flying"<<std::endl;
+    std::cout<<"Error: Drone is not flying"<< std::endl;
     return false;
   }
 }
@@ -101,6 +104,7 @@ void BehaviorRotateWithMpcControl::onActivate()
   self_localization_speed_sub = node_handle.subscribe("/" + nspace + "/self_localization/speed", 1, &BehaviorRotateWithMpcControl::selfLocalizationSpeedCallBack, this);
   //Publishers
   motion_reference_pose_pub = node_handle.advertise<geometry_msgs::PoseStamped>("/" + nspace + "/motion_reference/pose", 1,true);
+  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
 
   //Get current drone pose
   geometry_msgs::PoseStamped::ConstPtr sharedPose;
@@ -149,6 +153,10 @@ void BehaviorRotateWithMpcControl::onActivate()
   }
   reference_pose.pose.position = drone_initial_pose.pose.position;
   motion_reference_pose_pub.publish(reference_pose);
+  //Change flight state
+  aerostack_msgs::FlightState flight_state_msg;
+  flight_state_msg.state = aerostack_msgs::FlightState::FLYING;
+  flight_state_pub.publish(flight_state_msg);
 }
 
 void BehaviorRotateWithMpcControl::onDeactivate()
@@ -175,9 +183,6 @@ void BehaviorRotateWithMpcControl::selfLocalizationSpeedCallBack(const geometry_
 }
 void BehaviorRotateWithMpcControl::selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg){
   estimated_pose_msg = msg;
-}
-void BehaviorRotateWithMpcControl::statusCallBack(const aerostack_msgs::FlightState &msg){
-  status_msg = msg;
 }
 
 void BehaviorRotateWithMpcControl::onExecute()
