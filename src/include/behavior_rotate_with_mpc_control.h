@@ -47,8 +47,9 @@
 #include <aerostack_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/RequestProcesses.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/PoseStamped.h>
 #include "aerostack_msgs/FlightState.h"
+#include <geometry_msgs/PoseStamped.h>
+#include "aerostack_msgs/FlightActionCommand.h"
 
 // Aerostack libraries
 #include <behavior_execution_controller.h>
@@ -72,14 +73,16 @@ private:
   // Subscriber
   ros::Subscriber self_localization_speed_sub;
   ros::Subscriber self_localization_pose_sub;  
+  ros::Subscriber flight_status_sub;   
   //Publishers
   ros::Publisher motion_reference_pose_pub;
-  ros::Publisher flight_state_pub;
+  ros::Publisher flightaction_pub;
   
   // Messages
   geometry_msgs::TwistStamped estimated_speed_msg;
   geometry_msgs::PoseStamped estimated_pose_msg;
   geometry_msgs::PoseStamped reference_pose;
+  aerostack_msgs::FlightState flight_state_msg;
 
   float distance;
   bool quadrotor_moving;
@@ -104,8 +107,9 @@ private:
 
 public: 
   // Callbacks
-  void selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg);
-  void selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg);
+  void flightStatusCallBack(const aerostack_msgs::FlightState &msg);
+  void selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped::ConstPtr &msg);
+  void selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped::ConstPtr &msg);
 };
 }
 

@@ -51,7 +51,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Transform.h>
-#include "aerostack_msgs/FlightState.h"
+#include "aerostack_msgs/FlightActionCommand.h"
 #include <nav_msgs/Path.h>
 // Aerostack libraries
 #include <behavior_execution_controller.h>
@@ -81,7 +81,7 @@ private:
   ros::Subscriber path_blocked_sub;
   //Publishers
   ros::Publisher motion_reference_trajectory_pub; 
-  ros::Publisher flight_state_pub;
+  ros::Publisher flightaction_pub;
 
   // Messages
   geometry_msgs::TwistStamped estimated_speed_msg;

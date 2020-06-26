@@ -45,25 +45,16 @@ BehaviorHoverWithMpcControl::~BehaviorHoverWithMpcControl() {}
 void BehaviorHoverWithMpcControl::onConfigure()
 {
   node_handle = getNodeHandle();
-  nspace = getNamespace(); 
+  nspace = getNamespace();
+  flight_status_sub = node_handle.subscribe("/" + nspace + "/self_localization/flight_state", 1, &BehaviorHoverWithMpcControl::flightStatusCallBack, this);
 }
 
 bool BehaviorHoverWithMpcControl::checkSituation()
 {
-  geometry_msgs::PoseStamped::ConstPtr sharedPose;
-  geometry_msgs::PoseStamped drone_initial_pose;
-  sharedPose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/" + nspace + "/self_localization/pose",node_handle);
-  if(sharedPose != NULL){
-    drone_initial_pose = *sharedPose;
-  }
-
-  //Quadrotor is FLYING
-  if (drone_initial_pose.pose.position.z > 0.2){
+  if(flight_state_msg.state == aerostack_msgs::FlightState::FLYING || flight_state_msg.state == aerostack_msgs::FlightState::HOVERING ){
     return true;
-  }
-  else{
+  }else{
     setErrorMessage("Error: Drone is not flying");
-    std::cout<<"Error: Drone is not flying"<< std::endl;
     return false;
   }
 }
@@ -71,7 +62,7 @@ bool BehaviorHoverWithMpcControl::checkSituation()
 void BehaviorHoverWithMpcControl::onActivate()
 {
   motion_reference_pose_pub = node_handle.advertise<geometry_msgs::PoseStamped>("/" + nspace + "/motion_reference/pose", 1,true);
-  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
+  flightaction_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/"+nspace+"/actuator_command/flight_action", 1, true);
   self_localization_speed_sub = node_handle.subscribe("/" + nspace + "/self_localization/speed", 1, &BehaviorHoverWithMpcControl::selfLocalizationSpeedCallBack, this);
 
   //Get current drone pose
@@ -82,17 +73,19 @@ void BehaviorHoverWithMpcControl::onActivate()
     drone_initial_pose = *sharedPose;
   }
   
-  quadrotor_moving = true;
   received_speed = false;
   motion_reference_pose_pub.publish(drone_initial_pose);  
-  aerostack_msgs::FlightState flight_state_msg;
-  flight_state_msg.state = aerostack_msgs::FlightState::HOVERING;
-  flight_state_pub.publish(flight_state_msg);
+  //Send flight action
+  aerostack_msgs::FlightActionCommand flight_action_msg;
+  flight_action_msg.action = aerostack_msgs::FlightActionCommand::HOVER;
+  flightaction_pub.publish(flight_action_msg);
 }
 
 void BehaviorHoverWithMpcControl::onDeactivate()
 {
   motion_reference_pose_pub.shutdown();
+  flightaction_pub.shutdown();
+  self_localization_speed_sub.shutdown();
 }
 
 void BehaviorHoverWithMpcControl::onExecute()
@@ -102,9 +95,8 @@ void BehaviorHoverWithMpcControl::onExecute()
 
 void BehaviorHoverWithMpcControl::checkGoal(){}
 
-
 void BehaviorHoverWithMpcControl::checkProgress() {
-  if (!quadrotor_moving){
+  if (checkQuadrotorStopped()){
     distance = sqrt(pow(estimated_pose_msg.pose.position.x-reference_pose.pose.position.x,2)+
                     pow(estimated_pose_msg.pose.position.y-reference_pose.pose.position.y,2)+
                     pow(estimated_pose_msg.pose.position.z-reference_pose.pose.position.z,2));
@@ -122,12 +114,20 @@ void BehaviorHoverWithMpcControl::checkProcesses()
 
 bool BehaviorHoverWithMpcControl::checkQuadrotorStopped()
 {
-  if (abs(estimated_speed_msg.twist.linear.x) <= 0.1 && abs(estimated_speed_msg.twist.linear.y) <= 0.1 && abs(estimated_speed_msg.twist.linear.z) <= 0.1 &&
-      abs(estimated_speed_msg.twist.angular.x) <= 0.1 && abs(estimated_speed_msg.twist.angular.y) <= 0.1 && abs(estimated_speed_msg.twist.angular.z) <= 0.1 ){
-      return true;
+  if(received_speed){
+    if (abs(estimated_speed_msg.twist.linear.x) <= 0.1 && abs(estimated_speed_msg.twist.linear.y) <= 0.1 && abs(estimated_speed_msg.twist.linear.z) <= 0.1 &&
+        abs(estimated_speed_msg.twist.angular.x) <= 0.1 && abs(estimated_speed_msg.twist.angular.y) <= 0.1 && abs(estimated_speed_msg.twist.angular.z) <= 0.1 ){
+        return true;
+    }else{
+      return false;
+    }
   }else{
     return false;
   }
+}
+
+void BehaviorHoverWithMpcControl::flightStatusCallBack(const aerostack_msgs::FlightState &msg){
+  flight_state_msg = msg;
 }
 
 void BehaviorHoverWithMpcControl::selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg){

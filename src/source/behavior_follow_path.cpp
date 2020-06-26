@@ -98,7 +98,7 @@ void BehaviorFollowPath::onActivate()
   
   //Publishers
   motion_reference_trajectory_pub = node_handle.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/" + nspace + "/motion_reference/trajectory",1, true);
-  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
+  flightaction_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/"+nspace+"/actuator_command/flight_action", 1, true);
 
   //Get current drone pose
   geometry_msgs::PoseStamped::ConstPtr sharedPose;
@@ -107,7 +107,6 @@ void BehaviorFollowPath::onActivate()
   if(sharedPose != NULL){
     drone_initial_pose = *sharedPose;
   }
-
   remaining_points = 0;
   initiated = false;
   execute = true;
@@ -228,10 +227,10 @@ void BehaviorFollowPath::onActivate()
   //Send trajectory
   reference_path.header.stamp = ros::Time::now();
   motion_reference_trajectory_pub.publish(reference_path);
-  //Change flight state
-  aerostack_msgs::FlightState flight_state_msg;
-  flight_state_msg.state = aerostack_msgs::FlightState::FLYING;
-  flight_state_pub.publish(flight_state_msg);
+  //Send flight action
+  aerostack_msgs::FlightActionCommand flight_action_msg;
+  flight_action_msg.action = aerostack_msgs::FlightActionCommand::MOVE;
+  flightaction_pub.publish(flight_action_msg);
 }
 
 void BehaviorFollowPath::onDeactivate()

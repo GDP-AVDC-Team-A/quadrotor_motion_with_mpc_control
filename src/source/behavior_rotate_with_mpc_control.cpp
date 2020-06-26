@@ -44,31 +44,21 @@ void BehaviorRotateWithMpcControl::onConfigure()
 {
   node_handle = getNodeHandle();
   nspace = getNamespace(); 
-
+  flight_status_sub = node_handle.subscribe("/" + nspace + "/self_localization/flight_state", 1, &BehaviorRotateWithMpcControl::flightStatusCallBack, this);
 }
 
 bool BehaviorRotateWithMpcControl::checkSituation()
 {
-  geometry_msgs::PoseStamped::ConstPtr sharedPose;
-  geometry_msgs::PoseStamped drone_initial_pose;
-  sharedPose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/" + nspace + "/self_localization/pose",node_handle);
-  if(sharedPose != NULL){
-    drone_initial_pose = *sharedPose;
-  }
-
-  //Quadrotor is FLYING
-  if (drone_initial_pose.pose.position.z > 0.2){
+  if(flight_state_msg.state == aerostack_msgs::FlightState::FLYING || flight_state_msg.state == aerostack_msgs::FlightState::HOVERING ){
     return true;
-  }
-  else{
+  }else{
     setErrorMessage("Error: Drone is not flying");
-    std::cout<<"Error: Drone is not flying"<< std::endl;
     return false;
   }
 }
 
 void BehaviorRotateWithMpcControl::checkGoal(){ 
-  if (!quadrotor_moving){
+  if (checkQuadrotorStopped()){
       current_angle = 0;
       angle2 = 0;
       if(!(estimated_pose_msg.pose.orientation.w == 0 && estimated_pose_msg.pose.orientation.x == 0 && estimated_pose_msg.pose.orientation.y == 0 && estimated_pose_msg.pose.orientation.z == 0)){
@@ -77,12 +67,14 @@ void BehaviorRotateWithMpcControl::checkGoal(){
           angle2 = atan2(2.0 * (reference_pose.pose.orientation.z * reference_pose.pose.orientation.w + reference_pose.pose.orientation.x * reference_pose.pose.orientation.y) , 
                               - 1.0 + 2.0 * (reference_pose.pose.orientation.w * reference_pose.pose.orientation.w + reference_pose.pose.orientation.x * reference_pose.pose.orientation.x));    
       } 
-      if (abs(abs(angle2) - abs(current_angle)) < 0.01 && abs(estimated_speed_msg.twist.angular.x) <= 0.1) BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+      if (abs(abs(angle2) - abs(current_angle)) < 0.01 && abs(estimated_speed_msg.twist.angular.x) <= 0.1){
+        BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+      }
   }
 }
 
 void BehaviorRotateWithMpcControl::checkProgress() {
-  if (!quadrotor_moving){
+  if (checkQuadrotorStopped()){
     distance = sqrt(pow(estimated_pose_msg.pose.position.x-reference_pose.pose.position.x,2)+
                     pow(estimated_pose_msg.pose.position.y-reference_pose.pose.position.y,2)+
                     pow(estimated_pose_msg.pose.position.z-reference_pose.pose.position.z,2));
@@ -104,7 +96,7 @@ void BehaviorRotateWithMpcControl::onActivate()
   self_localization_speed_sub = node_handle.subscribe("/" + nspace + "/self_localization/speed", 1, &BehaviorRotateWithMpcControl::selfLocalizationSpeedCallBack, this);
   //Publishers
   motion_reference_pose_pub = node_handle.advertise<geometry_msgs::PoseStamped>("/" + nspace + "/motion_reference/pose", 1,true);
-  flight_state_pub = node_handle.advertise<aerostack_msgs::FlightState>("/" + nspace + "/self_localization/flight_state", 1, true);
+  flightaction_pub = node_handle.advertise<aerostack_msgs::FlightActionCommand>("/"+nspace+"/actuator_command/flight_action", 1, true);
 
   //Get current drone pose
   geometry_msgs::PoseStamped::ConstPtr sharedPose;
@@ -114,7 +106,6 @@ void BehaviorRotateWithMpcControl::onActivate()
     drone_initial_pose = *sharedPose;
   }
 
-  quadrotor_moving = true;
   received_speed = false;
 
   // Extract target yaw
@@ -153,15 +144,17 @@ void BehaviorRotateWithMpcControl::onActivate()
   }
   reference_pose.pose.position = drone_initial_pose.pose.position;
   motion_reference_pose_pub.publish(reference_pose);
-  //Change flight state
-  aerostack_msgs::FlightState flight_state_msg;
-  flight_state_msg.state = aerostack_msgs::FlightState::FLYING;
-  flight_state_pub.publish(flight_state_msg);
+  //Send flight action
+  aerostack_msgs::FlightActionCommand flight_action_msg;
+  flight_action_msg.action = aerostack_msgs::FlightActionCommand::MOVE;
+  flightaction_pub.publish(flight_action_msg);
 }
 
 void BehaviorRotateWithMpcControl::onDeactivate()
 {
   self_localization_pose_sub.shutdown();
+  self_localization_speed_sub.shutdown();
+  flightaction_pub.shutdown();
   motion_reference_pose_pub.shutdown();
 }
 
@@ -178,16 +171,19 @@ bool BehaviorRotateWithMpcControl::checkQuadrotorStopped()
     }    
 }
 
-void BehaviorRotateWithMpcControl::selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped &msg){
-  estimated_speed_msg = msg; received_speed = true;
+void BehaviorRotateWithMpcControl::flightStatusCallBack(const aerostack_msgs::FlightState &msg){
+  flight_state_msg = msg;
 }
-void BehaviorRotateWithMpcControl::selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped &msg){
-  estimated_pose_msg = msg;
+
+void BehaviorRotateWithMpcControl::selfLocalizationSpeedCallBack(const geometry_msgs::TwistStamped::ConstPtr &msg){
+  estimated_speed_msg = *msg; received_speed = true;
+}
+void BehaviorRotateWithMpcControl::selfLocalizationPoseCallBack(const geometry_msgs::PoseStamped::ConstPtr &msg){
+  estimated_pose_msg = *msg;
 }
 
 void BehaviorRotateWithMpcControl::onExecute()
 {
-
 }
 
 }

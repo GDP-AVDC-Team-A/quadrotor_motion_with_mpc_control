@@ -24,7 +24,7 @@
        <node pkg="nodelet" type="nodelet" args="load quadrotor_motion_with_mpc_control/BehaviorRotateWithMpcControl quadrotor_motion_with_mpc_control_manager"
         name="behavior_rotate_with_mpc_control" output="screen"/>         
        <node pkg="nodelet" type="nodelet" args="load quadrotor_motion_with_mpc_control/BehaviorFollowPath quadrotor_motion_with_mpc_control_manager"
-        name="behavior_follow_path" output="screen"/>
+        name="behavior_follow_path_with_mpc_control" output="screen"/>
         <node pkg="nodelet" type="nodelet" args="load quadrotor_motion_with_mpc_control/BehaviorQuadrotorMpcMotionControl quadrotor_motion_with_mpc_control_manager"
         name="behavior_quadrotor_mpc_motion_control" output="screen"/>                         
   </group>
