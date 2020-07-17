@@ -7,6 +7,13 @@
     <arg name="activation_finished_topic"          default="behavior_activation_finished" />
     <arg name="behavior_system"                    default="quadrotor_motion_with_mpc_control" />
     <arg name="drone_max_speed"                    default="1.0" /> <!-- m/s -->
+    <arg name="mav_name"                           default="hummingbird" />
+
+
+    <include file="$(find mav_linear_mpc)/launch/mav_linear_mpc_sim.launch">
+      <arg name="drone_id_namespace"  default="$(arg namespace)" />
+      <arg name="mav_name" 	default="$(arg mav_name)" />
+    </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
         <param name="~namespace"                           value="$(arg namespace)"                          type="str" />
