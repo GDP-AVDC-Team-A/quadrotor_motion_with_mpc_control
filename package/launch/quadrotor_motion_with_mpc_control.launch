@@ -11,8 +11,8 @@
 
 
     <include file="$(find mav_linear_mpc)/launch/mav_linear_mpc_sim.launch">
-      <arg name="drone_id_namespace"  default="$(arg namespace)" />
-      <arg name="mav_name" 	default="$(arg mav_name)" />
+      <arg name="drone_id_namespace"  value="$(arg namespace)" />
+      <arg name="mav_name" 	value="$(arg mav_name)" />
     </include>
 
    <group ns="$(arg namespace)/$(arg behavior_system)">
