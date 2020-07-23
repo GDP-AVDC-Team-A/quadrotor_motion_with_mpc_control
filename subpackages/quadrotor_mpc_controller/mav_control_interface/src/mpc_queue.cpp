@@ -185,7 +185,7 @@ void MPCQueue::checkPathReferences(Eigen::Vector3d position_ref, double yaw_ref)
   +pow(first_point.pose.position.y-position_ref.y(),2)
   +pow(first_point.pose.position.z-position_ref.z(),2));
   //We arrived to that point, send the remaining path and target point
-  if (yaw_diff < 0.1 && pose_dist_dff < 0.1){
+  if (yaw_diff < 0.5 && pose_dist_dff < 0.5){
     if(remaining_path.poses.size() > 0){
       remaining_path.poses.erase(remaining_path.poses.begin());
       publishPathReferences();
@@ -197,8 +197,10 @@ void MPCQueue::checkPathReferences(Eigen::Vector3d position_ref, double yaw_ref)
 - Added publishPathReferences function (it sends remaining path and assumed pose)
 */
 void MPCQueue::publishPathReferences(){
-  remaining_path_publisher.publish(remaining_path);
-  assumed_pose_publisher.publish(remaining_path.poses.front());
+  if(remaining_path.poses.size() > 0){
+    remaining_path_publisher.publish(remaining_path);
+    assumed_pose_publisher.publish(remaining_path.poses.front());
+  }
 }
 
 void MPCQueue::insertReferenceTrajectory(const mav_msgs::EigenTrajectoryPointDeque& queue)

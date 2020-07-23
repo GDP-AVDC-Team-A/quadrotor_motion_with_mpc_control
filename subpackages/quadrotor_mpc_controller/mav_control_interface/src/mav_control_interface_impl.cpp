@@ -174,7 +174,6 @@ void MavControlInterfaceImpl::CommandTrajectoryCallback(
   int array_size = msg->points.size();
   if (array_size == 0)
     return;
-
   mav_msgs::EigenTrajectoryPointDeque references;
   mav_msgs::eigenTrajectoryPointDequeFromMsg(*msg, &references);
   state_machine_->process_event(state_machine::ReferenceUpdate(references));

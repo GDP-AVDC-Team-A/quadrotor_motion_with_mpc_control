@@ -67,6 +67,9 @@ void BehaviorRotateWithMpcControl::checkGoal(){
           angle2 = atan2(2.0 * (reference_pose.pose.orientation.z * reference_pose.pose.orientation.w + reference_pose.pose.orientation.x * reference_pose.pose.orientation.y) , 
                               - 1.0 + 2.0 * (reference_pose.pose.orientation.w * reference_pose.pose.orientation.w + reference_pose.pose.orientation.x * reference_pose.pose.orientation.x));    
       } 
+      std::cout << "Current angle: " << current_angle << std::endl;
+      std::cout << "angle2: " << angle2 << std::endl;
+
       if (abs(abs(angle2) - abs(current_angle)) < 0.01 && abs(estimated_speed_msg.twist.angular.x) <= 0.1){
         BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
       }
@@ -148,6 +151,14 @@ void BehaviorRotateWithMpcControl::onActivate()
   aerostack_msgs::FlightActionCommand flight_action_msg;
   flight_action_msg.action = aerostack_msgs::FlightActionCommand::MOVE;
   flightaction_pub.publish(flight_action_msg);
+
+  //1 second waiting for MPC to be activated properly
+  ros::Time waiting_for_activation = ros::Time::now();
+  ros::Duration diff = ros::Time::now() -waiting_for_activation;
+  while(diff.toSec() < 1){
+    diff = ros::Time::now()-waiting_for_activation;
+  }
+  motion_reference_pose_pub.publish(reference_pose);
 }
 
 void BehaviorRotateWithMpcControl::onDeactivate()

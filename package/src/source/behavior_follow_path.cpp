@@ -127,8 +127,17 @@ void BehaviorFollowPath::onActivate()
     geometry_msgs::Transform trans_ref;
     trajectory_msgs::MultiDOFJointTrajectoryPoint point_ref;
     
+    //MPC goes faster to first point. We add its current position as a first point to avoid this
     if(yaw_parameter == "constant"){
-      //First point
+      //First point: drone pose
+      trans_ref.translation.x = drone_initial_pose.pose.position.x;
+      trans_ref.translation.y = drone_initial_pose.pose.position.y;
+      trans_ref.translation.z = drone_initial_pose.pose.position.z;
+      trans_ref.rotation = drone_initial_pose.pose.orientation;
+      point_ref.transforms.clear();
+      point_ref.transforms.push_back(trans_ref);
+      reference_path.points.push_back(point_ref);
+      //Second point
       trans_ref.translation.x = points[0][0];
       trans_ref.translation.y = points[0][1];
       trans_ref.translation.z = points[0][2];
@@ -139,10 +148,10 @@ void BehaviorFollowPath::onActivate()
       +pow(drone_initial_pose.pose.position.z-points[0][2],2)));
       //Calculates time to reach point
       double time_to_point;
-      if (distance_to_point < 0.1) time_to_point += 3;
-      else time_to_point += distance_to_point/DRONE_MAX_SPEED;
+      time_to_point += distance_to_point/DRONE_MAX_SPEED;
       ros::Duration d(time_to_point);
       point_ref.time_from_start = d;
+      point_ref.transforms.clear();
       point_ref.transforms.push_back(trans_ref);
       reference_path.points.push_back(point_ref);
       for(int i=1;i<points.size();i++){
@@ -154,8 +163,7 @@ void BehaviorFollowPath::onActivate()
         distance_to_point = abs(sqrt(pow(points[i-1][0]-points[i][0],2)+pow(points[i-1][1]-points[i][1],2)+pow(points[i-1][2]-points[i][2],2)));
         distance += distance_to_point;
         //Calculates time to reach point
-        if (distance_to_point < 0.1) time_to_point += 3;
-        else time_to_point += distance_to_point/DRONE_MAX_SPEED;
+        time_to_point += distance_to_point/DRONE_MAX_SPEED;
         ros::Duration d2(time_to_point);
         point_ref.time_from_start = d2;
         point_ref.transforms.clear();
@@ -163,7 +171,15 @@ void BehaviorFollowPath::onActivate()
         reference_path.points.push_back(point_ref);
       }
     }else{//Path facing
-      //First point
+      //First point: drone pose
+      trans_ref.translation.x = drone_initial_pose.pose.position.x;
+      trans_ref.translation.y = drone_initial_pose.pose.position.y;
+      trans_ref.translation.z = drone_initial_pose.pose.position.z;
+      trans_ref.rotation = drone_initial_pose.pose.orientation;
+      point_ref.transforms.clear();
+      point_ref.transforms.push_back(trans_ref);
+      reference_path.points.push_back(point_ref);
+      //Second point
       trans_ref.translation.x = points[0][0];
       trans_ref.translation.y = points[0][1];
       trans_ref.translation.z = points[0][2];
@@ -180,10 +196,10 @@ void BehaviorFollowPath::onActivate()
       +pow(drone_initial_pose.pose.position.z-points[0][2],2)));
       //Calculates time to reach point
       double time_to_point;
-      if (distance_to_point < 0.1) time_to_point += 3;
-      else time_to_point += distance_to_point/DRONE_MAX_SPEED;
+      time_to_point += distance_to_point/DRONE_MAX_SPEED;
       ros::Duration d(time_to_point);
       point_ref.time_from_start = d;
+      point_ref.transforms.clear();
       point_ref.transforms.push_back(trans_ref);
       reference_path.points.push_back(point_ref);
       for(int i=1;i<points.size();i++){
@@ -201,8 +217,7 @@ void BehaviorFollowPath::onActivate()
         distance_to_point = abs(sqrt(pow(points[i-1][0]-points[i][0],2)+pow(points[i-1][1]-points[i][1],2)+pow(points[i-1][2]-points[i][2],2)));
         distance += distance_to_point;
         //Calculates time to reach point
-        if (distance_to_point < 0.1) time_to_point += 3;
-        else time_to_point += distance_to_point/DRONE_MAX_SPEED;
+        time_to_point += distance_to_point/DRONE_MAX_SPEED;
         ros::Duration d2(time_to_point);
         point_ref.time_from_start = d2;
         point_ref.transforms.clear();
