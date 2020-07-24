@@ -45,7 +45,7 @@
 // Aerostack msgs
 #include <aerostack_msgs/BehaviorActivationFinished.h>
 #include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/RequestProcesses.h>
+
 #include <geometry_msgs/TwistStamped.h>
 #include "aerostack_msgs/FlightState.h"
 #include <geometry_msgs/PoseStamped.h>

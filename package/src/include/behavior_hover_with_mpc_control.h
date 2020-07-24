@@ -46,7 +46,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/RequestProcesses.h>
+
 // Aerostack libraries
 #include <behavior_execution_controller.h>
 #include "aerostack_msgs/SetControlMode.h"
