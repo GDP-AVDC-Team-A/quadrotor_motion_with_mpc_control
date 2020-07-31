@@ -54,7 +54,7 @@ bool BehaviorFollowPath::checkSituation()
 }
 
 void BehaviorFollowPath::checkGoal(){ 
-  if(initiated && remaining_points == 0 && checkFinalDistance() < 0.1 && checkQuadrotorStopped()){
+  if(initiated && remaining_points <= 1 && checkFinalDistance() < 0.1 && checkQuadrotorStopped()){
     initiated = false;
     BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
   } 
