@@ -57,7 +57,6 @@ catkin_package(
   roscpp 
   nodelet
   std_msgs
-  drone_process
   behavior_execution_controller
   geometry_msgs
   trajectory_msgs
