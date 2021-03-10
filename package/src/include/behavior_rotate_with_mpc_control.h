@@ -43,8 +43,8 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 // Aerostack msgs
-#include <aerostack_msgs/BehaviorActivationFinished.h>
-#include <aerostack_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 
 #include <geometry_msgs/TwistStamped.h>
 #include "aerostack_msgs/FlightState.h"

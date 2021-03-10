@@ -71,7 +71,7 @@ void BehaviorRotateWithMpcControl::checkGoal(){
       std::cout << "angle2: " << angle2 << std::endl;
 
       if (abs(abs(angle2) - abs(current_angle)) < 0.01 && abs(estimated_speed_msg.twist.angular.x) <= 0.1){
-        BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
+        BehaviorExecutionController::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::GOAL_ACHIEVED);
       }
   }
 }
@@ -82,7 +82,7 @@ void BehaviorRotateWithMpcControl::checkProgress() {
                     pow(estimated_pose_msg.pose.position.y-reference_pose.pose.position.y,2)+
                     pow(estimated_pose_msg.pose.position.z-reference_pose.pose.position.z,2));
 
-    if (distance > 1) BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
+    if (distance > 1) BehaviorExecutionController::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
   }
 }
 

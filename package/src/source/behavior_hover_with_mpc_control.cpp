@@ -102,7 +102,7 @@ void BehaviorHoverWithMpcControl::checkProgress() {
                     pow(estimated_pose_msg.pose.position.z-reference_pose.pose.position.z,2));
 
     if (distance > 1) 
-      BehaviorExecutionController::setTerminationCause(aerostack_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
+      BehaviorExecutionController::setTerminationCause(behavior_execution_manager_msgs::BehaviorActivationFinished::WRONG_PROGRESS);
   }
 }
 

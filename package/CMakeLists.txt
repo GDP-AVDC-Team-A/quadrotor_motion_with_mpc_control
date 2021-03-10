@@ -37,6 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
   nodelet
   std_msgs
   behavior_execution_controller
+  behavior_execution_manager_msgs
   geometry_msgs
   aerostack_msgs
 )
@@ -58,6 +59,7 @@ catkin_package(
   nodelet
   std_msgs
   behavior_execution_controller
+  behavior_execution_manager_msgs
   geometry_msgs
   trajectory_msgs
   aerostack_msgs

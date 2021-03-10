@@ -41,9 +41,9 @@
 #include <pluginlib/class_list_macros.h>
 #include <iostream>
 #include <fstream>
-#include <aerostack_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include "mav_msgs/Actuators.h"
-#include <aerostack_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include <behavior_execution_controller.h>
 
 namespace quadrotor_motion_with_mpc_control

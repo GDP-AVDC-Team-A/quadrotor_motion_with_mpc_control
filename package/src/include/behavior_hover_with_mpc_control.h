@@ -40,12 +40,12 @@
 #include <ros/ros.h>
 
 // Aerostack msgs
-#include <aerostack_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 #include "aerostack_msgs/FlightActionCommand.h"
 #include "aerostack_msgs/FlightState.h"
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <aerostack_msgs/BehaviorActivationFinished.h>
+#include <behavior_execution_manager_msgs/BehaviorActivationFinished.h>
 
 // Aerostack libraries
 #include <behavior_execution_controller.h>
